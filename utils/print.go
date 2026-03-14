@@ -1,11 +1,11 @@
-package cmd
+package utils
 
 import (
 	"encoding/json"
 	"fmt"
 )
 
-func printInvocation(command string, payload map[string]any) error {
+func PrintInvocation(command string, payload map[string]any) error {
 	body := map[string]any{
 		"command": command,
 		"args":    payload,

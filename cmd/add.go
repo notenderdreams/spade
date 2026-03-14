@@ -2,6 +2,10 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"spd/db"
+	"spd/utils"
+	"strings"
 
 	"github.com/urfave/cli/v3"
 )
@@ -25,20 +29,41 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 	_ = ctx
 
 	args := c.Args().Slice()
+	if len(args) < 2 {
+		return fmt.Errorf("usage: spade add <name> <command> [args...]")
+	}
+
+	runner := c.String("runner")
+	command := args[1]
+	commandArgs := args[2:]
+	if runner != "" {
+		command = runner
+		commandArgs = args[1:]
+	}
+
 	payload := map[string]any{
-		"raw_args": args,
-		"runner":   c.String("runner"),
+		"raw_args":     args,
+		"runner":       runner,
+		"name":         args[0],
+		"command":      command,
+		"command_args": commandArgs,
 	}
 
-	if len(args) > 0 {
-		payload["name"] = args[0]
-	}
-	if len(args) > 1 {
-		payload["command"] = args[1]
-	}
-	if len(args) > 2 {
-		payload["command_args"] = args[2:]
+	script := db.Script{
+		Name:    args[0],
+		Command: command,
+		Args:    commandArgs,
 	}
 
-	return printInvocation(c.Name, payload)
+	if err := db.AddScript(script); err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed: scripts.name") {
+			return fmt.Errorf("script %q already exists", args[0])
+		}
+		return err
+	}
+
+	payload["saved"] = true
+	payload["script"] = script
+
+	return utils.PrintInvocation(c.Name, payload)
 }

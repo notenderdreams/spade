@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"context"
-
+	"spd/db"
+	"spd/utils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -17,7 +18,13 @@ func newListCommand() *cli.Command {
 func cmdList(ctx context.Context, c *cli.Command) error {
 	_ = ctx
 
-	return printInvocation(c.Name, map[string]any{
+	scripts, err := db.GetAllScripts()
+	if err != nil {
+		return err
+	}
+
+	return utils.PrintInvocation(c.Name, map[string]any{
 		"raw_args": c.Args().Slice(),
+		"scripts":  scripts,
 	})
 }

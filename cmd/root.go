@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"spd/db"
+	"spd/utils"
 
 	"github.com/urfave/cli/v3"
 )
@@ -14,17 +16,7 @@ func NewRootCommand() *cli.Command {
 		Action:  cmdRoot,
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-
-			args := c.Args().Slice()
-			payload := map[string]any{
-				"raw_args": args,
-			}
-
-			if len(args) > 1 {
-				payload["command_args"] = args[1:]
-			}
-
-			_ = printInvocation(name, payload)
+			_ = printScriptLookupResult(name, c.Args().Slice())
 		},
 		Commands: []*cli.Command{
 			newAddCommand(),
@@ -39,16 +31,28 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		payload := map[string]any{
-			"raw_args": args,
-		}
-
-		if len(args) > 1 {
-			payload["command_args"] = args[1:]
-		}
-
-		return printInvocation(args[0], payload)
+		return printScriptLookupResult(args[0], args[1:])
 	}
 
 	return cli.ShowRootCommandHelp(c)
+}
+
+func printScriptLookupResult(name string, commandArgs []string) error {
+	script, err := db.GetScript(name)
+	if err != nil {
+		return err
+	}
+	if script == nil {
+		return utils.PrintInvocation(name, map[string]any{
+			"name":         name,
+			"command_args": commandArgs,
+			"message":      "no command or script found",
+		})
+	}
+
+	return utils.PrintInvocation(name, map[string]any{
+		"name":         name,
+		"command_args": commandArgs,
+		"script":       script,
+	})
 }
