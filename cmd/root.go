@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"context"
+	"fmt"
+	"os"
 	"spd/db"
 	"spd/utils"
 
@@ -16,7 +18,9 @@ func NewRootCommand() *cli.Command {
 		Action:  cmdRoot,
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			_ = printScriptLookupResult(name, c.Args().Slice())
+			if err := handleScriptInvocation(name, c.Args().Slice()); err != nil {
+				fmt.Fprintln(os.Stderr, "Error:", err)
+			}
 		},
 		Commands: []*cli.Command{
 			newAddCommand(),
@@ -31,13 +35,13 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		return printScriptLookupResult(args[0], args[1:])
+		return handleScriptInvocation(args[0], args[1:])
 	}
 
 	return cli.ShowRootCommandHelp(c)
 }
 
-func printScriptLookupResult(name string, commandArgs []string) error {
+func handleScriptInvocation(name string, commandArgs []string) error {
 	script, err := db.GetScript(name)
 	if err != nil {
 		return err
@@ -50,9 +54,8 @@ func printScriptLookupResult(name string, commandArgs []string) error {
 		})
 	}
 
-	return utils.PrintInvocation(name, map[string]any{
-		"name":         name,
-		"command_args": commandArgs,
-		"script":       script,
-	})
+	effectiveArgs := append([]string(nil), script.Args...)
+	effectiveArgs = append(effectiveArgs, commandArgs...)
+
+	return utils.ExecuteCommand(script.Command, effectiveArgs...)
 }
