@@ -43,20 +43,21 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 
 	runner := c.String("runner")
 	useRelativePath := c.Bool("relative-path")
+
 	command := args[1]
 	commandArgs := append([]string(nil), args[2:]...)
-	if runner != "" {
-		command = runner
-		commandArgs = append([]string(nil), args[1:]...)
-	}
 
 	if useRelativePath {
 		cwd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
-
 		command = filepath.Join(cwd, command)
+	}
+
+	if runner != "" {
+		commandArgs = append([]string{command}, commandArgs...)
+		command = runner
 	}
 
 	payload := map[string]any{
