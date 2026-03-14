@@ -31,14 +31,12 @@ func cmdRemove(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	payload := map[string]any{
-		"raw_args": args,
-		"name":     args[0],
-		"deleted":  deleted,
-	}
 	if !deleted {
-		payload["message"] = fmt.Sprintf("script %q not found", args[0])
+		utils.PrintInfo(fmt.Sprintf("script %q not found", args[0]))
+		return nil
 	}
 
-	return utils.PrintInvocation(c.Name, payload)
+	utils.PrintOK(fmt.Sprintf("removed script %q", args[0]))
+	return nil
+
 }

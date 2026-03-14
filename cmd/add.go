@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"spd/db"
 	"spd/utils"
-	"strings"
 
 	"github.com/urfave/cli/v3"
 )
@@ -37,9 +36,9 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) < 2 {
-		return fmt.Errorf("usage: spade add <name> <command> [args...]")
+		utils.PrintErr("usage: spade add <name> <command> [args...]")
+		return nil
 	}
-	rawArgs := append([]string(nil), args...)
 
 	runner := c.String("runner")
 	useRelativePath := c.Bool("relative-path")
@@ -60,13 +59,13 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 		command = runner
 	}
 
-	payload := map[string]any{
-		"raw_args":      rawArgs,
-		"runner":        runner,
-		"relative_path": useRelativePath,
-		"name":          args[0],
-		"command":       command,
-		"command_args":  commandArgs,
+	existing, err := db.GetScript(args[0])
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		utils.PrintErr(fmt.Sprintf("script %q already exists", args[0]))
+		return nil
 	}
 
 	script := db.Script{
@@ -76,14 +75,9 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 	}
 
 	if err := db.AddScript(script); err != nil {
-		if strings.Contains(err.Error(), "UNIQUE constraint failed: scripts.name") {
-			return fmt.Errorf("script %q already exists", args[0])
-		}
 		return err
 	}
 
-	payload["saved"] = true
-	payload["script"] = script
-
-	return utils.PrintInvocation(c.Name, payload)
+	utils.PrintOK(fmt.Sprintf("added script %q → %s", args[0], script.Command))
+	return nil
 }

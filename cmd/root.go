@@ -47,11 +47,8 @@ func handleScriptInvocation(name string, commandArgs []string) error {
 		return err
 	}
 	if script == nil {
-		return utils.PrintInvocation(name, map[string]any{
-			"name":         name,
-			"command_args": commandArgs,
-			"message":      "no command or script found",
-		})
+		utils.PrintErr(fmt.Sprintf("no command or script found: %q", name))
+		return nil
 	}
 
 	effectiveArgs := append([]string(nil), script.Args...)
