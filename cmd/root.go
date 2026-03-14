@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"spd/db"
 	"spd/utils"
 
@@ -51,8 +52,17 @@ func handleScriptInvocation(name string, commandArgs []string) error {
 		return nil
 	}
 
-	effectiveArgs := append([]string(nil), script.Args...)
-	effectiveArgs = append(effectiveArgs, commandArgs...)
+	cmd, expandedArgs, err := utils.SubstitutePlaceholders(script.Command, script.Args, commandArgs)
 
-	return utils.ExecuteCommand(script.Command, effectiveArgs...)
+	if err != nil {
+		return err
+	}
+
+	if err := utils.ExecuteCommand(cmd, expandedArgs...); err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			os.Exit(exitErr.ExitCode())
+		}
+		os.Exit(1)
+	}
+	return nil
 }
