@@ -3,6 +3,8 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"spd/db"
 	"spd/utils"
 	"strings"
@@ -20,6 +22,11 @@ func newAddCommand() *cli.Command {
 				Name:  "runner",
 				Usage: "Optional runner to prepend when executing the script",
 			},
+			&cli.BoolFlag{
+				Name:    "relative-path",
+				Aliases: []string{"rp", "reletive-path"},
+				Usage:   "Attach current directory to the command path",
+			},
 		},
 		Action: cmdAdd,
 	}
@@ -32,21 +39,33 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 	if len(args) < 2 {
 		return fmt.Errorf("usage: spade add <name> <command> [args...]")
 	}
+	rawArgs := append([]string(nil), args...)
 
 	runner := c.String("runner")
+	useRelativePath := c.Bool("relative-path")
 	command := args[1]
-	commandArgs := args[2:]
+	commandArgs := append([]string(nil), args[2:]...)
 	if runner != "" {
 		command = runner
-		commandArgs = args[1:]
+		commandArgs = append([]string(nil), args[1:]...)
+	}
+
+	if useRelativePath {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+
+		command = filepath.Join(cwd, command)
 	}
 
 	payload := map[string]any{
-		"raw_args":     args,
-		"runner":       runner,
-		"name":         args[0],
-		"command":      command,
-		"command_args": commandArgs,
+		"raw_args":      rawArgs,
+		"runner":        runner,
+		"relative_path": useRelativePath,
+		"name":          args[0],
+		"command":       command,
+		"command_args":  commandArgs,
 	}
 
 	script := db.Script{
