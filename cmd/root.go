@@ -16,10 +16,17 @@ func NewRootCommand() *cli.Command {
 		Name:    "spade",
 		Usage:   "A simple CLI tool to manage and run scripts",
 		Version: "0.1.0",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name: "dry-run",
+				Aliases: []string{"dr"},
+				Usage: "Print the resolved command without executing it",
+			},
+		},
 		Action:  cmdRoot,
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			if err := handleScriptInvocation(name, c.Args().Slice()); err != nil {
+			if err := handleScriptInvocation(name, c.Args().Slice(),false); err != nil {
 				utils.PrintErr(err.Error())
 				os.Exit(1)
 			}
@@ -39,7 +46,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		if err := handleScriptInvocation(args[0], args[1:]); err != nil {
+		if err := handleScriptInvocation(args[0], args[1:], c.Bool("dry-run")); err != nil {
 			utils.PrintErr(err.Error())
 			os.Exit(1)
 		}
@@ -49,7 +56,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 	return cli.ShowRootCommandHelp(c)
 }
 
-func handleScriptInvocation(name string, commandArgs []string) error {
+func handleScriptInvocation(name string, commandArgs []string, dryRun bool) error {
 	script, err := db.GetScript(name)
 	if err != nil {
 		return err
@@ -63,6 +70,11 @@ func handleScriptInvocation(name string, commandArgs []string) error {
 
 	if err != nil {
 		return err
+	}
+
+	if dryRun {
+		utils.PrintDryRun(cmd,expandedArgs)
+		return nil
 	}
 
 	if err := utils.ExecuteCommand(cmd, expandedArgs...); err != nil {
