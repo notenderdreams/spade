@@ -56,3 +56,10 @@ func PrintDryRun(cmd string, args []string) {
 	all := append([]string{cmd}, args...)
 	fmt.Println(dryRunStyle.Render("~") + "  " + msgStyle.Render(strings.Join(all, " ")))
 }
+
+func Confirm(prompt string) bool {
+	fmt.Print(infoStyle.Render("?") + "  " + msgStyle.Render(prompt+" [y/N] "))
+	var input string
+	fmt.Scanln(&input)
+	return strings.ToLower(strings.TrimSpace(input)) == "y"
+}
