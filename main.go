@@ -2,15 +2,15 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"spd/cmd"
+	"spd/utils"
 )
 
 func main() {
 	root := cmd.NewRootCommand()
 	if err := root.Run(context.Background(), os.Args); err != nil {
-		fmt.Fprintln(os.Stderr, "Error:", err)
+		utils.PrintErr(err.Error())
 		os.Exit(1)
 	}
 }

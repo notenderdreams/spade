@@ -6,7 +6,8 @@ import (
 	"strings"
 )
 
-var placeholderRe = regexp.MustCompile(`\{(\w+)\}`)
+var placeholderRe = regexp.MustCompile(`\{(\w+)(?:=([^}]*))?\}`)
+var defaultRe = regexp.MustCompile(`^\((\w+)=(.+)\)$`)
 
 func SubstitutePlaceholders(command string, scriptArgs []string, args []string) (string, []string, error) {
 	named := map[string]string{}
@@ -20,14 +21,28 @@ func SubstitutePlaceholders(command string, scriptArgs []string, args []string) 
 		}
 	}
 
-	allTemplates := append([]string{command}, scriptArgs...)
+	defaults := map[string]string{}
+	cleanedScriptArgs := make([]string, 0, len(scriptArgs))
+	for _, a := range scriptArgs {
+		if m := defaultRe.FindStringSubmatch(a); m != nil {
+			defaults[m[1]] = m[2]
+		} else {
+			cleanedScriptArgs = append(cleanedScriptArgs, a)
+		}
+	}
+
+	allTemplates := append([]string{command}, cleanedScriptArgs...)
 	seen := make([]string, 0, 8)
 	seenSet := make(map[string]bool, 8)
 	for _, t := range allTemplates {
 		for _, m := range placeholderRe.FindAllStringSubmatch(t, -1) {
-			if k := m[1]; !seenSet[k] {
+			k := m[1]
+			if !seenSet[k] {
 				seen = append(seen, k)
 				seenSet[k] = true
+			}
+			if m[2] != "" && defaults[k] == "" {
+				defaults[k] = m[2]
 			}
 		}
 	}
@@ -35,30 +50,33 @@ func SubstitutePlaceholders(command string, scriptArgs []string, args []string) 
 	resolved := map[string]string{}
 	posIdx := 0
 	for _, k := range seen {
-		if v, ok := named[k]; ok {
-			resolved[k] = v
-		} else if posIdx < len(positional) {
+		switch {
+		case named[k] != "":
+			resolved[k] = named[k]
+		case posIdx < len(positional):
 			resolved[k] = positional[posIdx]
 			posIdx++
-		} else {
-			return "", nil, fmt.Errorf("missing value for placeholder {%s}", k)
+		case defaults[k] != "":
+			resolved[k] = defaults[k]
+		default:
+			return "", nil, fmt.Errorf("Missing value for  placeholder {%s}", k)
 		}
 	}
 
 	expand := func(t string) string {
 		return placeholderRe.ReplaceAllStringFunc(t, func(m string) string {
-			key := m[1 : len(m)-1]
+			key := placeholderRe.FindStringSubmatch(m)[1]
 			return resolved[key]
 		})
 	}
 
 	if len(seen) == 0 {
-		return command, append(scriptArgs, args...), nil
+		return command, append(cleanedScriptArgs, args...), nil
 	}
 
 	expandedCmd := expand(command)
-	expandedArgs := make([]string, len(scriptArgs))
-	for i, a := range scriptArgs {
+	expandedArgs := make([]string, len(cleanedScriptArgs))
+	for i, a := range cleanedScriptArgs {
 		expandedArgs[i] = expand(a)
 	}
 

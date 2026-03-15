@@ -20,7 +20,8 @@ func NewRootCommand() *cli.Command {
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
 			if err := handleScriptInvocation(name, c.Args().Slice()); err != nil {
-				fmt.Fprintln(os.Stderr, "Error:", err)
+				utils.PrintErr(err.Error())
+				os.Exit(1)
 			}
 		},
 		Commands: []*cli.Command{
@@ -36,7 +37,11 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		return handleScriptInvocation(args[0], args[1:])
+		if err := handleScriptInvocation(args[0], args[1:]); err != nil {
+			utils.PrintErr(err.Error())
+			os.Exit(1)
+		}
+		return nil
 	}
 
 	return cli.ShowRootCommandHelp(c)

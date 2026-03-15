@@ -23,7 +23,8 @@ func cmdRemove(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) < 1 {
-		return fmt.Errorf("usage: spade remove <name>")
+		utils.PrintErr("usage: spd remove <name>")
+		return nil
 	}
 
 	deleted, err := db.DeleteScript(args[0])
