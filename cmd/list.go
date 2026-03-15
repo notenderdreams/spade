@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"spd/db"
+	"spd/utils"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -55,7 +56,7 @@ func cmdList(ctx context.Context, c *cli.Command) error {
 	fmt.Println(headerStyle.Render(pad("NAME", nameW+2)) + headerStyle.Render(pad("COMMAND", cmdW+2)) + headerStyle.Render("ARGS"))
 
 	for _, s := range scripts {
-		fmt.Println(nameStyle.Render(pad(s.Name, nameW+2)) + cmdStyle.Render(pad(s.Command, cmdW+2)) + argsStyle.Render(strings.Join(s.Args, " ")))
+		fmt.Println(nameStyle.Render(pad(s.Name, nameW+2)) + cmdStyle.Render(pad(s.Command, cmdW+2)) + utils.RenderArgs(s.Args))
 	}
 
 	return nil

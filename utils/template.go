@@ -98,3 +98,11 @@ func RenderArg(s string) string {
 		return out
 	})
 }
+
+func RenderArgs(args []string) string {
+	rendered := make([]string, len(args))
+	for i, a := range args {
+		rendered[i] = RenderArg(a)
+	}
+	return strings.Join(rendered, " ")
+}
