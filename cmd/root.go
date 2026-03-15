@@ -28,6 +28,7 @@ func NewRootCommand() *cli.Command {
 			newAddCommand(),
 			newInfoCommand(),
 			newListCommand(),
+			newRenameCommand(),
 			newRemoveCommand(),
 		},
 	}

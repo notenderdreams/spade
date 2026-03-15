@@ -132,3 +132,14 @@ func DeleteScript(name string) (bool, error) {
 
 	return affected > 0, nil
 }
+
+func RenameScript(oldName, newName string) error {
+	db, err := getConnection()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	_, err = db.Exec("UPDATE scripts SET name = ? WHERE name = ?", newName, oldName)
+	return err
+}

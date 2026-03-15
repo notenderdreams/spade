@@ -12,6 +12,7 @@ import (
 func newRemoveCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "remove",
+		Aliases:   []string{"rm"},
 		Usage:     "Remove a saved script",
 		ArgsUsage: "<name>",
 		Action:    cmdRemove,
