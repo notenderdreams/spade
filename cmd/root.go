@@ -26,6 +26,7 @@ func NewRootCommand() *cli.Command {
 		},
 		Commands: []*cli.Command{
 			newAddCommand(),
+			newInfoCommand(),
 			newListCommand(),
 			newRemoveCommand(),
 		},

@@ -83,3 +83,18 @@ func SubstitutePlaceholders(command string, scriptArgs []string, args []string) 
 	expandedArgs = append(expandedArgs, positional[posIdx:]...)
 	return expandedCmd, expandedArgs, nil
 }
+
+func RenderArg(s string) string {
+	return placeholderRe.ReplaceAllStringFunc(s, func(m string) string {
+		parts := placeholderRe.FindStringSubmatch(m)
+		name := parts[1]
+		def := parts[2]
+
+		out := PlaceholderBraceStyle.Render("{") + PlaceholderNameStyle.Render(name)
+		if def != "" {
+			out += PlaceholderEqStyle.Render("=") + PlaceholderDefaultStyle.Render(def)
+		}
+		out += PlaceholderBraceStyle.Render("}")
+		return out
+	})
+}

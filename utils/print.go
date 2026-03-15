@@ -12,6 +12,15 @@ var (
 	errStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#FDA4AF")).Bold(true)
 	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#A5B4FC")).Bold(true)
 	msgStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#E8E8E8"))
+
+	InfoHeaderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#E8E8E8")).Bold(true)
+	InfoNameStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#C084FC")).Bold(true)
+	InfoValueStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#64748B")).Italic(true)
+
+	PlaceholderNameStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#F9A8D4"))
+	PlaceholderDefaultStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#6EE7B7"))
+	PlaceholderEqStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("#64748B"))
+	PlaceholderBraceStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#475569"))
 )
 
 func PrintOK(msg string) {
