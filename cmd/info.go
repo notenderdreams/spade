@@ -14,6 +14,7 @@ import (
 func newInfoCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "info",
+		Aliases:   []string{"i"},
 		Usage:     "Show details of a saved script",
 		ArgsUsage: "<name>",
 		Action:    cmdInfo,

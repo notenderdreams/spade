@@ -14,6 +14,7 @@ import (
 func newAddCommand() *cli.Command {
 	return &cli.Command{
 		Name:      "add",
+		Aliases:   []string{"a"},
 		Usage:     "Add a new script",
 		ArgsUsage: "<name> <command> [args...]",
 		Flags: []cli.Flag{

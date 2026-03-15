@@ -21,6 +21,7 @@ var (
 func newListCommand() *cli.Command {
 	return &cli.Command{
 		Name:   "list",
+		Aliases:   []string{"ls"},
 		Usage:  "List saved scripts",
 		Action: cmdList,
 	}
