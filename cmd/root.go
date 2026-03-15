@@ -23,9 +23,9 @@ func NewRootCommand() *cli.Command {
 				Usage:   "Print the resolved command without executing it",
 			},
 			&cli.BoolFlag{
-				Name:  "confirm",
+				Name:    "confirm",
 				Aliases: []string{"c"},
-				Usage: "Show resolved command and prompt before executing",
+				Usage:   "Show resolved command and prompt before executing",
 			},
 		},
 		Action: cmdRoot,
@@ -41,6 +41,7 @@ func NewRootCommand() *cli.Command {
 			newInfoCommand(),
 			newListCommand(),
 			newRenameCommand(),
+			newUpdateCommand(),
 			newRemoveCommand(),
 		},
 	}
@@ -77,7 +78,7 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 		return err
 	}
 
-	if dryRun || confirm{
+	if dryRun || confirm {
 		utils.PrintDryRun(cmd, expandedArgs)
 	}
 
