@@ -1,4 +1,4 @@
-# ![Spade](assets/banner.png)
+# ![Spade](docs/assets/banner.png)
 
 Spade is a lightweight CLI to save, manage, and run reusable command shortcuts with support for templated arguments.
 
@@ -8,6 +8,8 @@ git clone https://github.com/notenderdreams/spade.git
 cd spade
 go build -o spd .
 ```
+For Shell Completion see [SHELL_COMPLETION.md](docs/SHELL_COMPLETION.md).
+
 
 ## Usage
 
