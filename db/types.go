@@ -5,3 +5,8 @@ type Script struct {
 	Command string
 	Args    []string
 }
+
+type ExportFile struct {
+	Version string      `json:"version"`
+	Scripts []Script `json:"scripts"`
+}

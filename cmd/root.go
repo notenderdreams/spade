@@ -43,6 +43,8 @@ func NewRootCommand() *cli.Command {
 			newRenameCommand(),
 			newUpdateCommand(),
 			newRemoveCommand(),
+			newExportCommand(),
+			newImportCommand(),
 		},
 	}
 }

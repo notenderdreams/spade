@@ -4,7 +4,7 @@ Spade is a lightweight CLI to save, manage, and run reusable command shortcuts w
 
 ## Installation
 ```bash
-git clone https://github.com/yourusername/spade
+git clone https://github.com/notenderdreams/spade.git
 cd spade
 go build -o spd .
 ```
@@ -110,6 +110,26 @@ spd remove <name>
 spd rm <name>
 ```
 
+### Export scripts
+```bash
+spd export                        # all scripts → scripts.spade
+spd export out.spade              # all scripts → out.spade
+spd export hwx                    # single script → scripts.spade
+spd export hwx out.spade          # single script → out.spade
+```
+> Export files use the `.spade` format (JSON) 
+
+### Import scripts
+```bash
+spd import out.spade              # from out.spade
+spd import out.spade --overwrite  # overwrite existing scripts
+```
+
+#### Flags
+| Flag | Alias | Description |
+|------|-------|-------------|
+| `--overwrite` | `-o` | Overwrite existing scripts on conflict |
+
 ## Commands
 
 | Command | Aliases | Description |
@@ -120,6 +140,9 @@ spd rm <name>
 | `update` | `u` | Update an existing script |
 | `rename` | `rnm` | Rename a script |
 | `remove` | `rm` | Remove a script |
+| `export` | `ex` | Export scripts to a file |
+| `import` | `im` | Import scripts from a file |
+
 
 ## Data
 
