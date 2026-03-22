@@ -45,6 +45,7 @@ func NewRootCommand() *cli.Command {
 			newRemoveCommand(),
 			newExportCommand(),
 			newImportCommand(),
+			newChainCommand(),
 		},
 	}
 }
@@ -74,34 +75,35 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 		return nil
 	}
 
-	cmd, expandedArgs, err := utils.SubstitutePlaceholders(script.Command, script.Args, commandArgs)
-
-	if err != nil {
-		return err
-	}
-
-	if script.Runner != "" {
-		expandedArgs = append([]string{cmd}, expandedArgs...)
-		cmd = script.Runner
-	}
-
-	if dryRun || confirm {
-		utils.PrintDryRun(cmd, expandedArgs)
-	}
-
-	if dryRun {
-		return nil
-	}
-
-	if confirm && !utils.Confirm("Execute?") {
-		return nil
-	}
-
-	if err := utils.ExecuteCommand(cmd, expandedArgs...); err != nil {
+	if err := invokeScript(script, commandArgs, dryRun, confirm, name); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			os.Exit(exitErr.ExitCode())
 		}
 		os.Exit(1)
 	}
 	return nil
+}
+
+func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, stepLabel string) error {
+	cmd, expandedArgs, err := utils.SubstitutePlaceholders(s.Command, s.Args, commandArgs)
+	if err != nil {
+		return err
+	}
+
+	if s.Runner != "" {
+		expandedArgs = append([]string{cmd}, expandedArgs...)
+		cmd = s.Runner
+	}
+
+	if dryRun || confirm {
+		utils.PrintDryRun(cmd, expandedArgs)
+	}
+	if dryRun {
+		return nil
+	}
+	if confirm && !utils.Confirm(fmt.Sprintf("run %q?", stepLabel)) {
+		return nil
+	}
+
+	return utils.ExecuteCommand(cmd, expandedArgs...)
 }
