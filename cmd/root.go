@@ -90,6 +90,11 @@ func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, step
 		return err
 	}
 
+	cmd, err = utils.ScriptExistsOrBackup(s.Name, cmd)
+	if err != nil {
+		return err
+	}
+
 	if s.Runner != "" {
 		expandedArgs = append([]string{cmd}, expandedArgs...)
 		cmd = s.Runner
