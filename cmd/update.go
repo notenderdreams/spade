@@ -26,6 +26,10 @@ func newUpdateCommand() *cli.Command {
 				Aliases: []string{"a"},
 				Usage:   "New args (space separated)",
 			},
+			&cli.StringFlag{
+				Name:  "runner",
+				Usage: "New runner (pass empty string to clear)",
+			},
 		},
 		Action: cmdUpdate,
 	}
@@ -42,9 +46,10 @@ func cmdUpdate(ctx context.Context, c *cli.Command) error {
 
 	newCmd := c.String("command")
 	newArgs := c.String("args")
+	newRunner := c.String("runner")
 
-	if newCmd == "" && newArgs == "" {
-		utils.PrintErr("at least one of --command or --args is required")
+	if newCmd == "" && newArgs == "" && !c.IsSet("runner") {
+		utils.PrintErr("at least one of --command, --args, or --runner is required")
 		return nil
 	}
 
@@ -64,7 +69,9 @@ func cmdUpdate(ctx context.Context, c *cli.Command) error {
 	if newArgs != "" {
 		script.Args = splitArgs(newArgs)
 	}
-
+	if c.IsSet("runner") {
+		script.Runner = newRunner
+	}
 	if err := db.UpdateScript(*script); err != nil {
 		return err
 	}

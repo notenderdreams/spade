@@ -47,6 +47,9 @@ func cmdInfo(ctx context.Context, c *cli.Command) error {
 
 	fmt.Println(utils.InfoHeaderStyle.Render("Script: ") + utils.InfoNameStyle.Render(script.Name))
 	fmt.Println(utils.InfoHeaderStyle.Render("Command:") + " " + utils.InfoValueStyle.Render(script.Command))
+	if script.Runner != "" {
+		fmt.Println(utils.InfoHeaderStyle.Render("Runner: ") + " " + utils.InfoValueStyle.Render(script.Runner))
+	}
 	if len(script.Args) > 0 {
 		fmt.Println(utils.InfoHeaderStyle.Render("Args:   ") + " " + strings.Join(renderedArgs, " "))
 	}

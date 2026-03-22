@@ -55,11 +55,6 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 		command = filepath.Join(cwd, command)
 	}
 
-	if runner != "" {
-		commandArgs = append([]string{command}, commandArgs...)
-		command = runner
-	}
-
 	existing, err := db.GetScript(args[0])
 	if err != nil {
 		return err
@@ -73,6 +68,7 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 		Name:    args[0],
 		Command: command,
 		Args:    commandArgs,
+		Runner:  runner,
 	}
 
 	if err := db.AddScript(script); err != nil {

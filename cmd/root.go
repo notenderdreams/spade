@@ -80,6 +80,11 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 		return err
 	}
 
+	if script.Runner != "" {
+		expandedArgs = append([]string{cmd}, expandedArgs...)
+		cmd = script.Runner
+	}
+
 	if dryRun || confirm {
 		utils.PrintDryRun(cmd, expandedArgs)
 	}
