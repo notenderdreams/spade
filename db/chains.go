@@ -145,3 +145,37 @@ func getChainSteps(db *sql.DB, chainID int) ([]ChainStep, error) {
 	}
 	return steps, nil
 }
+
+func RenameChain(oldName, newName string) error {
+	db, err := GetInstance()
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("UPDATE chains SET name = ? WHERE name = ?", newName, oldName)
+	return err
+}
+
+func AppendChainStep(chainName, scriptName string) error {
+	db, err := GetInstance()
+	if err != nil {
+		return err
+	}
+
+	row := db.QueryRow("SELECT id FROM chains WHERE name = ?", chainName)
+	var id int
+	if err := row.Scan(&id); err != nil {
+		return err
+	}
+
+	var maxSeq int
+	row = db.QueryRow("SELECT COALESCE(MAX(seq), -1) FROM chain_steps WHERE chain_id = ?", id)
+	if err := row.Scan(&maxSeq); err != nil {
+		return err
+	}
+
+	_, err = db.Exec(
+		"INSERT INTO chain_steps (chain_id, script_name, seq) VALUES (?, ?, ?)",
+		id, scriptName, maxSeq+1,
+	)
+	return err
+}
