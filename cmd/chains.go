@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"spd/db"
 	"spd/utils"
 	"strings"
@@ -15,6 +16,38 @@ func newChainCommand() *cli.Command {
 		Name:    "chain",
 		Aliases: []string{"ch"},
 		Usage:   "Manage and run script chains",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "dry-run",
+				Aliases: []string{"dr"},
+				Usage:   "Print resolved commands without executing",
+			},
+			&cli.BoolFlag{
+				Name:    "confirm",
+				Aliases: []string{"c"},
+				Usage:   "Prompt before each step",
+			},
+			&cli.BoolFlag{
+				Name:    "stop-on-error",
+				Aliases: []string{"se"},
+				Usage:   "Stop chain if a step fails",
+			},
+		},
+		Action: func(ctx context.Context, c *cli.Command) error {
+			_ = ctx
+			args := c.Args().Slice()
+			if len(args) > 0 {
+				return executeChainByName(args[0], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"))
+			}
+			return cli.ShowSubcommandHelp(c)
+		},
+		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
+			_ = ctx
+			if err := executeChainByName(name, c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error")); err != nil {
+				utils.PrintErr(err.Error())
+				os.Exit(1)
+			}
+		},
 		Commands: []*cli.Command{
 			newChainAddCommand(),
 			newChainRemoveCommand(),
@@ -224,26 +257,15 @@ func cmdChainInfo(ctx context.Context, c *cli.Command) error {
 	return nil
 }
 
-func cmdChainRun(ctx context.Context, c *cli.Command) error {
-	_ = ctx
-	args := c.Args().Slice()
-	if len(args) < 1 {
-		utils.PrintErr("usage: spd chain run <name>")
-		return nil
-	}
-
-	chain, err := db.GetChain(args[0])
+func executeChainByName(name string, dryRun, confirm, stopOnError bool) error {
+	chain, err := db.GetChain(name)
 	if err != nil {
 		return err
 	}
 	if chain == nil {
-		utils.PrintErr(fmt.Sprintf("no chain found: %q", args[0]))
+		utils.PrintErr(fmt.Sprintf("no chain found: %q", name))
 		return nil
 	}
-
-	dryRun := c.Bool("dry-run")
-	confirm := c.Bool("confirm")
-	stopOnError := c.Bool("stop-on-error")
 
 	for _, step := range chain.Steps {
 		utils.PrintInfo(fmt.Sprintf("running [%d] %s", step.Seq, step.Script.Name))
@@ -257,4 +279,19 @@ func cmdChainRun(ctx context.Context, c *cli.Command) error {
 		}
 	}
 	return nil
+}
+
+func cmdChainRun(ctx context.Context, c *cli.Command) error {
+	_ = ctx
+	args := c.Args().Slice()
+	if len(args) < 1 {
+		utils.PrintErr("usage: spd chain run <name>")
+		return nil
+	}
+
+	dryRun := c.Bool("dry-run")
+	confirm := c.Bool("confirm")
+	stopOnError := c.Bool("stop-on-error")
+
+	return executeChainByName(args[0], dryRun, confirm, stopOnError)
 }
