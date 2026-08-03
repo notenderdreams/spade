@@ -42,6 +42,9 @@ func cmdChainInfo(ctx context.Context, c *cli.Command) error {
 		if step.PipeToNext {
 			fmt.Print("    ->")
 		}
+		if step.StopOnError {
+			fmt.Print("    !")
+		}
 		prefix := utils.InfoValueStyle.Render(fmt.Sprintf("  [%d]", step.Seq))
 		name := utils.InfoNameStyle.Render(step.Script.Name)
 		cmd := utils.InfoValueStyle.Render(step.Script.Command)

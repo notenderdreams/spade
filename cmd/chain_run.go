@@ -68,13 +68,15 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 
 		if step.PipeToNext {
 			pipeline := []utils.PipelineCommand{}
+			pipelineStopOnError := false
 			j := i
 			for {
 				current := chain.Steps[j]
+				pipelineStopOnError = pipelineStopOnError || current.StopOnError
 				cmd, args, dir, err := prepareScript(&current.Script, commandArgs, workspace)
 				if err != nil {
 					utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", current.Seq, current.Script.Name, err.Error()))
-					if stopOnError {
+					if stopOnError || pipelineStopOnError {
 						return nil
 					}
 					break
@@ -94,7 +96,7 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 			if !dryRun && len(pipeline) > 0 {
 				if err := utils.ExecutePipeline(pipeline); err != nil {
 					utils.PrintErr(fmt.Sprintf("pipeline failed: %s", err.Error()))
-					if stopOnError {
+					if stopOnError || pipelineStopOnError {
 						return nil
 					}
 				}
@@ -105,7 +107,7 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 
 		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, step.Script.Name, workspace); err != nil {
 			utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", step.Seq, step.Script.Name, err.Error()))
-			if stopOnError {
+			if stopOnError || step.StopOnError {
 				return nil
 			}
 		}

@@ -15,9 +15,10 @@ type Chain struct {
 }
 
 type ChainStep struct {
-	Seq        int
-	Script     Script
-	PipeToNext bool
+	Seq         int
+	Script      Script
+	PipeToNext  bool
+	StopOnError bool
 }
 
 type ExportFile struct {

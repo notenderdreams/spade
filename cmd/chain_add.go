@@ -30,10 +30,27 @@ func cmdChainAdd(ctx context.Context, c *cli.Command) error {
 	name := args[0]
 	scriptNames := args[1:]
 	pipeAfter := make([]bool, len(scriptNames))
+	stopAfter := make([]bool, len(scriptNames))
 	cleanNames := make([]string, 0, len(scriptNames))
 	lastWasPipe := false
 	for _, token := range scriptNames {
-		if token == "->" {
+		if len(token) > 1 && token[len(token)-1] == '!' {
+			token = token[:len(token)-1]
+			if token == "" {
+				utils.PrintErr("! must follow a script")
+				return nil
+			}
+			stopAfter[len(cleanNames)] = true
+		}
+		if token == "!" {
+			if len(cleanNames) == 0 {
+				utils.PrintErr("! must follow a script")
+				return nil
+			}
+			stopAfter[len(cleanNames)-1] = true
+			continue
+		}
+		if token == "->" || token == "}" || token == "then" {
 			if len(cleanNames) == 0 || lastWasPipe {
 				utils.PrintErr("pipe operator must connect two scripts")
 				return nil
@@ -71,7 +88,7 @@ func cmdChainAdd(ctx context.Context, c *cli.Command) error {
 		}
 	}
 
-	if err := db.AddChain(name, scriptNames, pipeAfter); err != nil {
+	if err := db.AddChain(name, scriptNames, pipeAfter, stopAfter); err != nil {
 		return err
 	}
 

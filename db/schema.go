@@ -28,6 +28,7 @@ func schema(db *sql.DB) error {
 			script_name TEXT    NOT NULL REFERENCES scripts(name) ON DELETE RESTRICT,
 			seq         INTEGER NOT NULL,
 			pipe_after  INTEGER NOT NULL DEFAULT 0,
+			stop_after  INTEGER NOT NULL DEFAULT 0,
 			PRIMARY KEY (chain_id, seq)
 		);	
 	`)
@@ -42,6 +43,10 @@ func schema(db *sql.DB) error {
 	}
 	_, err = db.Exec("ALTER TABLE chain_steps ADD COLUMN pipe_after INTEGER NOT NULL DEFAULT 0")
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name: pipe_after") {
+		return err
+	}
+	_, err = db.Exec("ALTER TABLE chain_steps ADD COLUMN stop_after INTEGER NOT NULL DEFAULT 0")
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name: stop_after") {
 		return err
 	}
 	return nil

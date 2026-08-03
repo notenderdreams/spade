@@ -51,11 +51,19 @@ workspace with the script. The runtime flag overrides the saved value:
 
 ### Pipelines
 
-Chain steps can pass standard output to the next step with `->`:
+Chain steps can pass standard output to the next step with `then`:
 
 ```bash
-spd chain add verify install '->' build '->' test
+spd chain add verify install then build then test
 spd chain run verify
+```
+
+The `->` operator is also supported when quoted: `install '->' build`.
+
+Add `!` after a step to stop the chain when that step or pipeline fails:
+
+```bash
+spd chain add verify install then build! then test
 ```
 
 Normal chains remain sequential and do not connect input/output:

@@ -59,7 +59,7 @@ func GetChain(name string) (*Chain, error) {
 	return &c, nil
 }
 
-func AddChain(name string, scriptNames []string, pipeAfter []bool) error {
+func AddChain(name string, scriptNames []string, pipeAfter, stopAfter []bool) error {
 	db, err := GetInstance()
 	if err != nil {
 		return err
@@ -79,12 +79,16 @@ func AddChain(name string, scriptNames []string, pipeAfter []bool) error {
 
 	for i, s := range scriptNames {
 		pipe := false
+		stop := false
 		if i < len(pipeAfter) {
 			pipe = pipeAfter[i]
 		}
+		if i < len(stopAfter) {
+			stop = stopAfter[i]
+		}
 		if _, err := tx.Exec(
-			"INSERT INTO chain_steps (chain_id, script_name, seq, pipe_after) VALUES (?, ?, ?, ?)",
-			id, s, i, pipe,
+			"INSERT INTO chain_steps (chain_id, script_name, seq, pipe_after, stop_after) VALUES (?, ?, ?, ?, ?)",
+			id, s, i, pipe, stop,
 		); err != nil {
 			return err
 		}
@@ -124,7 +128,7 @@ func DeleteChain(name string) (bool, error) {
 
 func getChainSteps(db *sql.DB, chainID int) ([]ChainStep, error) {
 	rows, err := db.Query(`
-		SELECT cs.seq, s.name, s.cmd, s.args, COALESCE(s.runner, ''), COALESCE(s.workspace, ''), cs.pipe_after
+		SELECT cs.seq, s.name, s.cmd, s.args, COALESCE(s.runner, ''), COALESCE(s.workspace, ''), cs.pipe_after, cs.stop_after
 		FROM chain_steps cs
 		JOIN scripts s ON cs.script_name = s.name
 		WHERE cs.chain_id = ?
@@ -139,7 +143,7 @@ func getChainSteps(db *sql.DB, chainID int) ([]ChainStep, error) {
 	for rows.Next() {
 		var step ChainStep
 		var args string
-		if err := rows.Scan(&step.Seq, &step.Script.Name, &step.Script.Command, &args, &step.Script.Runner, &step.Script.Workspace, &step.PipeToNext); err != nil {
+		if err := rows.Scan(&step.Seq, &step.Script.Name, &step.Script.Command, &args, &step.Script.Runner, &step.Script.Workspace, &step.PipeToNext, &step.StopOnError); err != nil {
 			return nil, err
 		}
 		if err := json.Unmarshal([]byte(args), &step.Script.Args); err != nil {
