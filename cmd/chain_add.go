@@ -14,7 +14,7 @@ func newChainAddCommand() *cli.Command {
 		Name:      "add",
 		Aliases:   []string{"a"},
 		Usage:     "Create a new chain",
-		ArgsUsage: "<name> <script1> <script2> ...",
+		ArgsUsage: "<name> <script1> [-> <script2> ...]",
 		Action:    cmdChainAdd,
 	}
 }
@@ -29,6 +29,27 @@ func cmdChainAdd(ctx context.Context, c *cli.Command) error {
 
 	name := args[0]
 	scriptNames := args[1:]
+	pipeAfter := make([]bool, len(scriptNames))
+	cleanNames := make([]string, 0, len(scriptNames))
+	lastWasPipe := false
+	for _, token := range scriptNames {
+		if token == "->" {
+			if len(cleanNames) == 0 || lastWasPipe {
+				utils.PrintErr("pipe operator must connect two scripts")
+				return nil
+			}
+			pipeAfter[len(cleanNames)-1] = true
+			lastWasPipe = true
+			continue
+		}
+		cleanNames = append(cleanNames, token)
+		lastWasPipe = false
+	}
+	if len(cleanNames) < 1 || lastWasPipe {
+		utils.PrintErr("pipe operator must connect two scripts")
+		return nil
+	}
+	scriptNames = cleanNames
 
 	existing, err := db.GetChain(name)
 	if err != nil {
@@ -50,7 +71,7 @@ func cmdChainAdd(ctx context.Context, c *cli.Command) error {
 		}
 	}
 
-	if err := db.AddChain(name, scriptNames); err != nil {
+	if err := db.AddChain(name, scriptNames, pipeAfter); err != nil {
 		return err
 	}
 

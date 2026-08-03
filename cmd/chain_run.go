@@ -62,8 +62,46 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 		return nil
 	}
 
-	for _, step := range chain.Steps {
+	for i := 0; i < len(chain.Steps); {
+		step := chain.Steps[i]
 		utils.PrintInfo(fmt.Sprintf("running [%d] %s", step.Seq, step.Script.Name))
+
+		if step.PipeToNext {
+			pipeline := []utils.PipelineCommand{}
+			j := i
+			for {
+				current := chain.Steps[j]
+				cmd, args, dir, err := prepareScript(&current.Script, commandArgs, workspace)
+				if err != nil {
+					utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", current.Seq, current.Script.Name, err.Error()))
+					if stopOnError {
+						return nil
+					}
+					break
+				}
+				if dryRun || confirm {
+					utils.PrintDryRun(cmd, args)
+				}
+				if confirm && !utils.Confirm(fmt.Sprintf("run %q?", current.Script.Name)) {
+					continue
+				}
+				pipeline = append(pipeline, utils.PipelineCommand{Command: cmd, Args: args, Workspace: dir})
+				if !current.PipeToNext || j+1 >= len(chain.Steps) {
+					break
+				}
+				j++
+			}
+			if !dryRun && len(pipeline) > 0 {
+				if err := utils.ExecutePipeline(pipeline); err != nil {
+					utils.PrintErr(fmt.Sprintf("pipeline failed: %s", err.Error()))
+					if stopOnError {
+						return nil
+					}
+				}
+			}
+			i = j + 1
+			continue
+		}
 
 		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, step.Script.Name, workspace); err != nil {
 			utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", step.Seq, step.Script.Name, err.Error()))
@@ -71,6 +109,7 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 				return nil
 			}
 		}
+		i++
 	}
 	return nil
 }

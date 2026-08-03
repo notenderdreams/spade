@@ -49,6 +49,21 @@ workspace with the script. The runtime flag overrides the saved value:
 `spd --workspace /another/project build`. The same flag is available for chains:
 `spd chain run --workspace /path/to/project release`.
 
+### Pipelines
+
+Chain steps can pass standard output to the next step with `->`:
+
+```bash
+spd chain add verify install '->' build '->' test
+spd chain run verify
+```
+
+Normal chains remain sequential and do not connect input/output:
+
+```bash
+spd chain add verify install build test
+```
+
 ### Templates
 
 Placeholders are defined with `{name}` and support inline defaults with `{name=default}`.

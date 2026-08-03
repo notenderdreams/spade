@@ -90,24 +90,10 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 }
 
 func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, stepLabel, workspace string) error {
-	if workspace == "" {
-		workspace = s.Workspace
-	}
-	cmd, expandedArgs, err := utils.SubstitutePlaceholders(s.Command, s.Args, commandArgs)
+	cmd, expandedArgs, workspace, err := prepareScript(s, commandArgs, workspace)
 	if err != nil {
 		return err
 	}
-
-	cmd, err = utils.ScriptExistsOrBackup(s.Name, cmd)
-	if err != nil {
-		return err
-	}
-
-	if s.Runner != "" {
-		expandedArgs = append([]string{cmd}, expandedArgs...)
-		cmd = s.Runner
-	}
-
 	if dryRun || confirm {
 		utils.PrintDryRun(cmd, expandedArgs)
 	}
@@ -119,4 +105,26 @@ func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, step
 	}
 
 	return utils.ExecuteCommandInWorkspace(workspace, cmd, expandedArgs...)
+}
+
+func prepareScript(s *db.Script, commandArgs []string, workspace string) (string, []string, string, error) {
+	if workspace == "" {
+		workspace = s.Workspace
+	}
+	cmd, expandedArgs, err := utils.SubstitutePlaceholders(s.Command, s.Args, commandArgs)
+	if err != nil {
+		return "", nil, "", err
+	}
+
+	cmd, err = utils.ScriptExistsOrBackup(s.Name, cmd)
+	if err != nil {
+		return "", nil, "", err
+	}
+
+	if s.Runner != "" {
+		expandedArgs = append([]string{cmd}, expandedArgs...)
+		cmd = s.Runner
+	}
+
+	return cmd, expandedArgs, workspace, nil
 }
