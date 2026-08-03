@@ -50,6 +50,9 @@ func cmdInfo(ctx context.Context, c *cli.Command) error {
 	if script.Runner != "" {
 		fmt.Println(utils.InfoHeaderStyle.Render("Runner: ") + " " + utils.InfoValueStyle.Render(script.Runner))
 	}
+	if script.Workspace != "" {
+		fmt.Println(utils.InfoHeaderStyle.Render("Workspace:") + " " + utils.InfoValueStyle.Render(script.Workspace))
+	}
 	if len(script.Args) > 0 {
 		fmt.Println(utils.InfoHeaderStyle.Render("Args:   ") + " " + strings.Join(renderedArgs, " "))
 	}

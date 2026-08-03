@@ -11,24 +11,24 @@ import (
 
 func newRenameCommand() *cli.Command {
 	return &cli.Command{
-		Name: "rename",
-		Aliases: []string {"rnm"} ,
-		Usage: "Rename a saved scirpt",
+		Name:      "rename",
+		Aliases:   []string{"rnm"},
+		Usage:     "Rename a saved scirpt",
 		ArgsUsage: "<old_name> <new_name>",
-		Action: cmdRename,	
+		Action:    cmdRename,
 	}
 }
 
 func cmdRename(ctx context.Context, c *cli.Command) error {
-	_ = ctx 
-	
+	_ = ctx
+
 	args := c.Args().Slice()
 	if len(args) < 2 {
 		utils.PrintErr("usage: add rename <old_name> <new_nmae>")
 		return nil
 	}
 
-	oldName, newName := args[0], args[1] 
+	oldName, newName := args[0], args[1]
 
 	script, err := db.GetScript(oldName)
 	if err != nil {

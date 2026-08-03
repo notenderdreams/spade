@@ -3,6 +3,7 @@ package utils
 import (
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 )
 
@@ -49,6 +50,11 @@ func StoreAtScriptDir(name, srcPath string) error {
 
 func ScriptExistsOrBackup(name, path string) (string, error) {
 	if info, err := os.Stat(path); err == nil && !info.IsDir() {
+		return path, nil
+	}
+	// Commands without a path (for example, "just" or "go") are resolved
+	// through PATH by os/exec rather than as files in Spade's current directory.
+	if _, err := exec.LookPath(path); err == nil {
 		return path, nil
 	}
 

@@ -1,10 +1,11 @@
 package db
 
 type Script struct {
-	Name    string
-	Command string
-	Args    []string
-	Runner  string
+	Name      string
+	Command   string
+	Args      []string
+	Runner    string
+	Workspace string
 }
 
 type Chain struct {

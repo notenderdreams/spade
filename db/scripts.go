@@ -11,7 +11,7 @@ func GetAllScripts() ([]Script, error) {
 		return nil, err
 	}
 
-	rows, err := db.Query("SELECT name, cmd, args, COALESCE(runner, '') FROM scripts")
+	rows, err := db.Query("SELECT name, cmd, args, COALESCE(runner, ''), COALESCE(workspace, '') FROM scripts")
 	if err != nil {
 		return nil, err
 	}
@@ -21,7 +21,7 @@ func GetAllScripts() ([]Script, error) {
 	for rows.Next() {
 		var s Script
 		var args string
-		if err := rows.Scan(&s.Name, &s.Command, &args, &s.Runner); err != nil {
+		if err := rows.Scan(&s.Name, &s.Command, &args, &s.Runner, &s.Workspace); err != nil {
 			return nil, err
 		}
 		if err := json.Unmarshal([]byte(args), &s.Args); err != nil {
@@ -38,10 +38,10 @@ func GetScript(name string) (*Script, error) {
 		return nil, err
 	}
 
-	row := db.QueryRow("SELECT name, cmd, args, COALESCE(runner, '') FROM scripts WHERE name = ?", name)
+	row := db.QueryRow("SELECT name, cmd, args, COALESCE(runner, ''), COALESCE(workspace, '') FROM scripts WHERE name = ?", name)
 	var s Script
 	var args string
-	if err := row.Scan(&s.Name, &s.Command, &args, &s.Runner); err != nil {
+	if err := row.Scan(&s.Name, &s.Command, &args, &s.Runner, &s.Workspace); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
@@ -70,8 +70,8 @@ func AddScript(s Script) error {
 	}
 
 	_, err = db.Exec(
-		"INSERT INTO scripts (name, cmd, args, runner) VALUES (?, ?, ?, ?)",
-		s.Name, s.Command, string(args), runner,
+		"INSERT INTO scripts (name, cmd, args, runner, workspace) VALUES (?, ?, ?, ?, ?)",
+		s.Name, s.Command, string(args), runner, s.Workspace,
 	)
 	return err
 }
@@ -93,8 +93,8 @@ func UpdateScript(s Script) error {
 	}
 
 	_, err = db.Exec(
-		"UPDATE scripts SET cmd = ?, args = ?, runner = ? WHERE name = ?",
-		s.Command, string(args), runner, s.Name,
+		"UPDATE scripts SET cmd = ?, args = ?, runner = ?, workspace = ? WHERE name = ?",
+		s.Command, string(args), runner, s.Workspace, s.Name,
 	)
 	return err
 }

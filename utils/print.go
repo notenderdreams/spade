@@ -3,15 +3,15 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"github.com/charmbracelet/lipgloss"
+	"strings"
 )
 
 var (
-	okStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#86EFAC")).Bold(true)
-	errStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#FDA4AF")).Bold(true)
-	infoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#A5B4FC")).Bold(true)
-	msgStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#E8E8E8"))
+	okStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("#86EFAC")).Bold(true)
+	errStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#FDA4AF")).Bold(true)
+	infoStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#A5B4FC")).Bold(true)
+	msgStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("#E8E8E8"))
 	dryRunStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#FCD34D")).Bold(true)
 
 	InfoHeaderStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#E8E8E8")).Bold(true)
@@ -22,7 +22,6 @@ var (
 	PlaceholderDefaultStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#6EE7B7"))
 	PlaceholderEqStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("#64748B"))
 	PlaceholderBraceStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("#475569"))
-
 )
 
 func PrintOK(msg string) {

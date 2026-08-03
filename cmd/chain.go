@@ -14,6 +14,11 @@ func newChainCommand() *cli.Command {
 		Aliases: []string{"ch"},
 		Usage:   "Manage and run script chains",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "workspace",
+				Aliases: []string{"w"},
+				Usage:   "Run all steps from this directory",
+			},
 			&cli.BoolFlag{
 				Name:    "dry-run",
 				Aliases: []string{"dr"},
@@ -34,13 +39,13 @@ func newChainCommand() *cli.Command {
 			_ = ctx
 			args := c.Args().Slice()
 			if len(args) > 0 {
-				return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"))
+				return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace"))
 			}
 			return cli.ShowSubcommandHelp(c)
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			if err := executeChainByName(name, c.Args().Slice(), c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error")); err != nil {
+			if err := executeChainByName(name, c.Args().Slice(), c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace")); err != nil {
 				utils.PrintErr(err.Error())
 				os.Exit(1)
 			}

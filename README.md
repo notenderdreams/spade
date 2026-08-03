@@ -26,6 +26,7 @@ spd add hello python3 /path/to/hello.py
 | Flag | Alias | Description |
 |------|-------|-------------|
 | `--runner` | | Prepend a runner to the command |
+| `--workspace` | `-w` | Save the directory to run the command from |
 | `--relative-path` | `--rp` | Attach current directory to command path |
 
 ### Run a script
@@ -41,6 +42,12 @@ spd greet name=Batman             # named
 |------|-------|-------------|
 | `--dry-run` | `--dr` | Print resolved command without executing |
 | `--confirm` | `--c` | Show resolved command and prompt before executing |
+| `--workspace` | `-w` | Run the command from this directory |
+
+For example, `spd add build make --workspace /path/to/project` saves the
+workspace with the script. The runtime flag overrides the saved value:
+`spd --workspace /another/project build`. The same flag is available for chains:
+`spd chain run --workspace /path/to/project release`.
 
 ### Templates
 

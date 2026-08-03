@@ -22,6 +22,11 @@ func newAddCommand() *cli.Command {
 				Name:  "runner",
 				Usage: "Optional runner to prepend when executing the script",
 			},
+			&cli.StringFlag{
+				Name:    "workspace",
+				Aliases: []string{"w"},
+				Usage:   "Workspace directory to run the script from",
+			},
 			&cli.BoolFlag{
 				Name:    "relative-path",
 				Aliases: []string{"rp", "rel"},
@@ -47,6 +52,7 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 	}
 
 	runner := c.String("runner")
+	workspace := c.String("workspace")
 	useRelativePath := c.Bool("relative-path")
 	store := c.Bool("store")
 
@@ -76,10 +82,11 @@ func cmdAdd(ctx context.Context, c *cli.Command) error {
 	}
 
 	script := db.Script{
-		Name:    args[0],
-		Command: command,
-		Args:    commandArgs,
-		Runner:  runner,
+		Name:      args[0],
+		Command:   command,
+		Args:      commandArgs,
+		Runner:    runner,
+		Workspace: workspace,
 	}
 
 	if err := db.AddScript(script); err != nil {

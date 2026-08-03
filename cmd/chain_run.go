@@ -16,6 +16,11 @@ func newChainRunCommand() *cli.Command {
 		Usage:     "Run a chain",
 		ArgsUsage: "<name> [args...]",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "workspace",
+				Aliases: []string{"w"},
+				Usage:   "Run all steps from this directory",
+			},
 			&cli.BoolFlag{
 				Name:    "dry-run",
 				Aliases: []string{"dr"},
@@ -44,10 +49,10 @@ func cmdChainRun(ctx context.Context, c *cli.Command) error {
 		return nil
 	}
 
-	return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"))
+	return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace"))
 }
 
-func executeChainByName(name string, commandArgs []string, dryRun, confirm, stopOnError bool) error {
+func executeChainByName(name string, commandArgs []string, dryRun, confirm, stopOnError bool, workspace string) error {
 	chain, err := db.GetChain(name)
 	if err != nil {
 		return err
@@ -60,7 +65,7 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 	for _, step := range chain.Steps {
 		utils.PrintInfo(fmt.Sprintf("running [%d] %s", step.Seq, step.Script.Name))
 
-		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, step.Script.Name); err != nil {
+		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, step.Script.Name, workspace); err != nil {
 			utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", step.Seq, step.Script.Name, err.Error()))
 			if stopOnError {
 				return nil

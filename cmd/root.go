@@ -17,6 +17,11 @@ func NewRootCommand() *cli.Command {
 		Usage:   "A simple CLI tool to manage and run scripts",
 		Version: "0.1.0",
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "workspace",
+				Aliases: []string{"w"},
+				Usage:   "Run the script from this directory",
+			},
 			&cli.BoolFlag{
 				Name:    "dry-run",
 				Aliases: []string{"dr"},
@@ -31,7 +36,7 @@ func NewRootCommand() *cli.Command {
 		Action: cmdRoot,
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			if err := handleScriptInvocation(name, c.Args().Slice(), false, false); err != nil {
+			if err := handleScriptInvocation(name, c.Args().Slice(), false, false, c.String("workspace")); err != nil {
 				utils.PrintErr(err.Error())
 				os.Exit(1)
 			}
@@ -55,7 +60,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		if err := handleScriptInvocation(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm")); err != nil {
+		if err := handleScriptInvocation(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.String("workspace")); err != nil {
 			utils.PrintErr(err.Error())
 			os.Exit(1)
 		}
@@ -65,7 +70,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 	return cli.ShowRootCommandHelp(c)
 }
 
-func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm bool) error {
+func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm bool, workspace string) error {
 	script, err := db.GetScript(name)
 	if err != nil {
 		return err
@@ -75,7 +80,7 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 		return nil
 	}
 
-	if err := invokeScript(script, commandArgs, dryRun, confirm, name); err != nil {
+	if err := invokeScript(script, commandArgs, dryRun, confirm, name, workspace); err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			os.Exit(exitErr.ExitCode())
 		}
@@ -84,7 +89,10 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 	return nil
 }
 
-func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, stepLabel string) error {
+func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, stepLabel, workspace string) error {
+	if workspace == "" {
+		workspace = s.Workspace
+	}
 	cmd, expandedArgs, err := utils.SubstitutePlaceholders(s.Command, s.Args, commandArgs)
 	if err != nil {
 		return err
@@ -110,5 +118,5 @@ func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, step
 		return nil
 	}
 
-	return utils.ExecuteCommand(cmd, expandedArgs...)
+	return utils.ExecuteCommandInWorkspace(workspace, cmd, expandedArgs...)
 }

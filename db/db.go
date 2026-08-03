@@ -2,15 +2,15 @@ package db
 
 import (
 	"database/sql"
-	"sync"
-	"spd/utils"	
 	_ "modernc.org/sqlite"
+	"spd/utils"
+	"sync"
 )
 
 var (
-	once 	sync.Once
+	once     sync.Once
 	instance *sql.DB
-	initErr	error 
+	initErr  error
 )
 
 func GetInstance() (*sql.DB, error) {
@@ -29,4 +29,3 @@ func GetInstance() (*sql.DB, error) {
 	})
 	return instance, initErr
 }
-		
