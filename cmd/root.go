@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/exec"
 	"spd/db"
 	"spd/utils"
 
@@ -32,11 +31,16 @@ func NewRootCommand() *cli.Command {
 				Aliases: []string{"c"},
 				Usage:   "Show resolved command and prompt before executing",
 			},
+			&cli.BoolFlag{
+				Name:    "detached",
+				Aliases: []string{"d"},
+				Usage:   "Run process in background (detached)",
+			},
 		},
 		Action: cmdRoot,
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			if err := handleScriptInvocation(name, c.Args().Slice(), false, false, c.String("workspace")); err != nil {
+			if err := handleScriptInvocation(name, c.Args().Slice(), false, false, c.Bool("detached"), c.String("workspace")); err != nil {
 				utils.PrintErr(err.Error())
 				os.Exit(1)
 			}
@@ -51,6 +55,7 @@ func NewRootCommand() *cli.Command {
 			newExportCommand(),
 			newImportCommand(),
 			newChainCommand(),
+			newBgCommand(),
 		},
 	}
 }
@@ -60,7 +65,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 
 	args := c.Args().Slice()
 	if len(args) > 0 {
-		if err := handleScriptInvocation(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.String("workspace")); err != nil {
+		if err := handleScriptInvocation(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("detached"), c.String("workspace")); err != nil {
 			utils.PrintErr(err.Error())
 			os.Exit(1)
 		}
@@ -70,7 +75,7 @@ func cmdRoot(ctx context.Context, c *cli.Command) error {
 	return cli.ShowRootCommandHelp(c)
 }
 
-func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm bool, workspace string) error {
+func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm, detached bool, workspace string) error {
 	script, err := db.GetScript(name)
 	if err != nil {
 		return err
@@ -80,16 +85,13 @@ func handleScriptInvocation(name string, commandArgs []string, dryRun, confirm b
 		return nil
 	}
 
-	if err := invokeScript(script, commandArgs, dryRun, confirm, name, workspace); err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			os.Exit(exitErr.ExitCode())
-		}
-		os.Exit(1)
+	if err := invokeScript(script, commandArgs, dryRun, confirm, detached, name, workspace); err != nil {
+		return err
 	}
 	return nil
 }
 
-func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, stepLabel, workspace string) error {
+func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm, detached bool, stepLabel, workspace string) error {
 	cmd, expandedArgs, workspace, err := prepareScript(s, commandArgs, workspace)
 	if err != nil {
 		return err
@@ -101,6 +103,15 @@ func invokeScript(s *db.Script, commandArgs []string, dryRun, confirm bool, step
 		return nil
 	}
 	if confirm && !utils.Confirm(fmt.Sprintf("run %q?", stepLabel)) {
+		return nil
+	}
+
+	if detached {
+		id, logFile, err := utils.ExecuteDetachedInWorkspace(workspace, stepLabel, cmd, expandedArgs...)
+		if err != nil {
+			return err
+		}
+		utils.PrintOK(fmt.Sprintf("Started background process [%d] (Log: %s)", id, logFile))
 		return nil
 	}
 

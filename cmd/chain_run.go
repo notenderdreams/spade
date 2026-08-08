@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"spd/db"
 	"spd/utils"
 
@@ -36,6 +37,11 @@ func newChainRunCommand() *cli.Command {
 				Aliases: []string{"se"},
 				Usage:   "Stop chain if a step fails",
 			},
+			&cli.BoolFlag{
+				Name:    "detached",
+				Aliases: []string{"d"},
+				Usage:   "Run chain in background (detached)",
+			},
 		},
 		Action: cmdChainRun,
 	}
@@ -49,16 +55,38 @@ func cmdChainRun(ctx context.Context, c *cli.Command) error {
 		return nil
 	}
 
-	return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace"))
+	return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.Bool("detached"), c.String("workspace"))
 }
 
-func executeChainByName(name string, commandArgs []string, dryRun, confirm, stopOnError bool, workspace string) error {
+func executeChainByName(name string, commandArgs []string, dryRun, confirm, stopOnError, detached bool, workspace string) error {
 	chain, err := db.GetChain(name)
 	if err != nil {
 		return err
 	}
 	if chain == nil {
 		utils.PrintErr(fmt.Sprintf("no chain found: %q", name))
+		return nil
+	}
+
+	if detached {
+		exePath, err := os.Executable()
+		if err != nil {
+			return err
+		}
+		chainArgs := []string{"chain", "run", name}
+		chainArgs = append(chainArgs, commandArgs...)
+		if workspace != "" {
+			chainArgs = append(chainArgs, "-w", workspace)
+		}
+		if stopOnError {
+			chainArgs = append(chainArgs, "-se")
+		}
+
+		id, logFile, err := utils.ExecuteDetachedInWorkspace(workspace, name, exePath, chainArgs...)
+		if err != nil {
+			return err
+		}
+		utils.PrintOK(fmt.Sprintf("Started background chain [%d] (Log: %s)", id, logFile))
 		return nil
 	}
 
@@ -105,7 +133,7 @@ func executeChainByName(name string, commandArgs []string, dryRun, confirm, stop
 			continue
 		}
 
-		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, step.Script.Name, workspace); err != nil {
+		if err := invokeScript(&step.Script, commandArgs, dryRun, confirm, false, step.Script.Name, workspace); err != nil {
 			utils.PrintErr(fmt.Sprintf("[%d] %s failed: %s", step.Seq, step.Script.Name, err.Error()))
 			if stopOnError || step.StopOnError {
 				return nil

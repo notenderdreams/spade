@@ -34,18 +34,23 @@ func newChainCommand() *cli.Command {
 				Aliases: []string{"se"},
 				Usage:   "Stop chain if a step fails",
 			},
+			&cli.BoolFlag{
+				Name:    "detached",
+				Aliases: []string{"d"},
+				Usage:   "Run chain in background (detached)",
+			},
 		},
 		Action: func(ctx context.Context, c *cli.Command) error {
 			_ = ctx
 			args := c.Args().Slice()
 			if len(args) > 0 {
-				return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace"))
+				return executeChainByName(args[0], args[1:], c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.Bool("detached"), c.String("workspace"))
 			}
 			return cli.ShowSubcommandHelp(c)
 		},
 		CommandNotFound: func(ctx context.Context, c *cli.Command, name string) {
 			_ = ctx
-			if err := executeChainByName(name, c.Args().Slice(), c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.String("workspace")); err != nil {
+			if err := executeChainByName(name, c.Args().Slice(), c.Bool("dry-run"), c.Bool("confirm"), c.Bool("stop-on-error"), c.Bool("detached"), c.String("workspace")); err != nil {
 				utils.PrintErr(err.Error())
 				os.Exit(1)
 			}
