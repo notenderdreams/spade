@@ -37,4 +37,9 @@ test "$workspace_output" = "$WORKSPACE"
 "$BIN" chain smoke-stop >/dev/null 2>&1 || true
 test ! -e "$MARKER"
 
+"$BIN" add smoke-bg echo "detached test"
+"$BIN" smoke-bg -d
+sleep 1
+"$BIN" bg clean
+
 echo "smoke tests passed"

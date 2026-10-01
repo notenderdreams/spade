@@ -27,6 +27,7 @@ func newBgCommand() *cli.Command {
 		Commands: []*cli.Command{
 			newBgListCommand(),
 			newBgKillCommand(),
+			newBgCleanCommand(),
 		},
 	}
 }
@@ -136,5 +137,53 @@ func cmdBgKill(ctx context.Context, c *cli.Command) error {
 	}
 
 	utils.PrintOK(fmt.Sprintf("Killed background process [%d] (PID %d: %s)", proc.ID, proc.PID, proc.Name))
+	return nil
+}
+
+func newBgCleanCommand() *cli.Command {
+	return &cli.Command{
+		Name:      "clean",
+		Aliases:   []string{"c"},
+		Usage:     "Clear background process log files",
+		ArgsUsage: "[id|name]",
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "force",
+				Aliases: []string{"f"},
+				Usage:   "Force removal of logs even for active background processes",
+			},
+		},
+		Action: cmdBgClean,
+	}
+}
+
+func cmdBgClean(ctx context.Context, c *cli.Command) error {
+	_ = ctx
+	args := c.Args().Slice()
+	target := ""
+	if len(args) > 0 {
+		target = args[0]
+	}
+
+	force := c.Bool("force")
+	res, err := utils.ClearBgLogs(target, force)
+	if err != nil {
+		utils.PrintErr(err.Error())
+		return nil
+	}
+
+	if res.Cleared == 0 && res.Skipped == 0 {
+		utils.PrintInfo("No log files found to clear")
+		return nil
+	}
+
+	if res.Cleared > 0 {
+		utils.PrintOK(fmt.Sprintf("Cleared %d log file(s)", res.Cleared))
+	}
+
+	if res.Skipped > 0 {
+		utils.PrintInfo(fmt.Sprintf("Skipped %d active process log(s) (use --force or -f to delete all)", res.Skipped))
+	}
+
 	return nil
 }

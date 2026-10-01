@@ -183,3 +183,103 @@ func KillBgProcess(target string) (*ProcessInfo, error) {
 	_ = saveBgProcesses(remaining)
 	return targetProc, nil
 }
+
+type ClearBgLogsResult struct {
+	Cleared int
+	Skipped int
+}
+
+func ClearBgLogs(target string, force bool) (*ClearBgLogsResult, error) {
+	bgDir := getBgDir()
+	activeProcs, err := ListBgProcesses()
+	if err != nil {
+		return nil, err
+	}
+
+	activeLogs := make(map[string]bool)
+	for _, p := range activeProcs {
+		activeLogs[filepath.Clean(p.LogFile)] = true
+	}
+
+	res := &ClearBgLogsResult{}
+
+	// If a specific target is provided (id, process name, or log file name)
+	if target != "" {
+		allProcs, _ := loadBgProcesses()
+		targetID, idErr := strconv.Atoi(target)
+
+		// Try finding by process ID or Name in registered processes
+		var matchedProc *ProcessInfo
+		for _, p := range allProcs {
+			if (idErr == nil && p.ID == targetID) || strings.EqualFold(p.Name, target) {
+				pCopy := p
+				matchedProc = &pCopy
+				break
+			}
+		}
+
+		var targetLogPath string
+		if matchedProc != nil {
+			targetLogPath = matchedProc.LogFile
+			if IsProcessAlive(matchedProc.PID) && !force {
+				return nil, fmt.Errorf("process [%d] (%s) is still running; use --force to delete its log", matchedProc.ID, matchedProc.Name)
+			}
+		} else {
+			// Check if target is a file in bgDir or target is an ID like "1" -> "bg_1.log"
+			candidates := []string{
+				filepath.Join(bgDir, target),
+			}
+			if idErr == nil {
+				candidates = append(candidates, filepath.Join(bgDir, fmt.Sprintf("bg_%d.log", targetID)))
+			}
+			if !strings.HasSuffix(target, ".log") {
+				candidates = append(candidates, filepath.Join(bgDir, target+".log"))
+			}
+
+			for _, c := range candidates {
+				if info, err := os.Stat(c); err == nil && !info.IsDir() {
+					targetLogPath = c
+					break
+				}
+			}
+		}
+
+		if targetLogPath == "" {
+			return nil, fmt.Errorf("no log file found matching %q", target)
+		}
+
+		if activeLogs[filepath.Clean(targetLogPath)] && !force {
+			return nil, fmt.Errorf("log file %q belongs to an active process; use --force to delete it", filepath.Base(targetLogPath))
+		}
+
+		if err := os.Remove(targetLogPath); err != nil {
+			return nil, err
+		}
+		res.Cleared = 1
+		return res, nil
+	}
+
+	// No target provided: clear all log files
+	entries, err := os.ReadDir(bgDir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".log") {
+			continue
+		}
+
+		filePath := filepath.Join(bgDir, entry.Name())
+		if activeLogs[filepath.Clean(filePath)] && !force {
+			res.Skipped++
+			continue
+		}
+
+		if err := os.Remove(filePath); err == nil {
+			res.Cleared++
+		}
+	}
+
+	return res, nil
+}
