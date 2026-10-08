@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -154,7 +156,7 @@ func KillBgProcess(target string) (*ProcessInfo, error) {
 
 	for _, p := range list {
 		match := false
-		if idErr == nil && p.ID == targetID {
+		if idErr == nil && (p.ID == targetID || p.PID == targetID) {
 			match = true
 		} else if strings.EqualFold(p.Name, target) {
 			match = true
@@ -208,10 +210,10 @@ func ClearBgLogs(target string, force bool) (*ClearBgLogsResult, error) {
 		allProcs, _ := loadBgProcesses()
 		targetID, idErr := strconv.Atoi(target)
 
-		// Try finding by process ID or Name in registered processes
+		// Try finding by process ID, PID, or Name in registered processes
 		var matchedProc *ProcessInfo
 		for _, p := range allProcs {
-			if (idErr == nil && p.ID == targetID) || strings.EqualFold(p.Name, target) {
+			if (idErr == nil && (p.ID == targetID || p.PID == targetID)) || strings.EqualFold(p.Name, target) {
 				pCopy := p
 				matchedProc = &pCopy
 				break
@@ -282,4 +284,92 @@ func ClearBgLogs(target string, force bool) (*ClearBgLogsResult, error) {
 	}
 
 	return res, nil
+}
+
+func AttachBgProcess(ctx context.Context, target string) error {
+	activeProcs, err := ListBgProcesses()
+	if err != nil {
+		return err
+	}
+
+	targetID, idErr := strconv.Atoi(target)
+	var targetProc *ProcessInfo
+
+	for _, p := range activeProcs {
+		if (idErr == nil && (p.ID == targetID || p.PID == targetID)) || strings.EqualFold(p.Name, target) {
+			pCopy := p
+			targetProc = &pCopy
+			break
+		}
+	}
+
+	if targetProc == nil {
+		allProcs, _ := loadBgProcesses()
+		for _, p := range allProcs {
+			if (idErr == nil && (p.ID == targetID || p.PID == targetID)) || strings.EqualFold(p.Name, target) {
+				return fmt.Errorf("background process [%d] (%s) is not running", p.ID, p.Name)
+			}
+		}
+		return fmt.Errorf("no running background process found matching %q", target)
+	}
+
+	logPath := targetProc.LogFile
+	f, err := os.Open(logPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("log file for process [%d] not found: %s", targetProc.ID, logPath)
+		}
+		return err
+	}
+	defer f.Close()
+
+	PrintInfo(fmt.Sprintf("Attaching to [%d] (PID %d: %s)...", targetProc.ID, targetProc.PID, targetProc.Name))
+	PrintInfo("Press Ctrl+C to detach")
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(sigChan)
+
+	buf := make([]byte, 4096)
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for {
+		for {
+			n, rErr := f.Read(buf)
+			if n > 0 {
+				_, _ = os.Stdout.Write(buf[:n])
+			}
+			if rErr != nil {
+				break
+			}
+		}
+
+		if !IsProcessAlive(targetProc.PID) {
+			for {
+				n, rErr := f.Read(buf)
+				if n > 0 {
+					_, _ = os.Stdout.Write(buf[:n])
+				}
+				if rErr != nil {
+					break
+				}
+			}
+			PrintOK(fmt.Sprintf("Process [%d] finished", targetProc.ID))
+			_, _ = ListBgProcesses()
+			return nil
+		}
+
+		select {
+		case <-sigChan:
+			fmt.Println()
+			PrintInfo(fmt.Sprintf("Detached from process [%d]", targetProc.ID))
+			return nil
+		case <-ctx.Done():
+			fmt.Println()
+			PrintInfo(fmt.Sprintf("Detached from process [%d]", targetProc.ID))
+			return nil
+		case <-ticker.C:
+		}
+	}
 }

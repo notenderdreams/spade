@@ -42,4 +42,13 @@ test ! -e "$MARKER"
 sleep 1
 "$BIN" bg clean
 
+"$BIN" add smoke-bg-attach sleep 1
+"$BIN" smoke-bg-attach -d
+attach_out=$("$BIN" bg attach smoke-bg-attach)
+case "$attach_out" in
+  *"Attaching to"* ) ;;
+  * ) echo "unexpected attach output: $attach_out"; exit 1 ;;
+esac
+"$BIN" bg clean
+
 echo "smoke tests passed"

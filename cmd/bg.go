@@ -28,6 +28,7 @@ func newBgCommand() *cli.Command {
 			newBgListCommand(),
 			newBgKillCommand(),
 			newBgCleanCommand(),
+			newBgAttachCommand(),
 		},
 	}
 }
@@ -183,6 +184,31 @@ func cmdBgClean(ctx context.Context, c *cli.Command) error {
 
 	if res.Skipped > 0 {
 		utils.PrintInfo(fmt.Sprintf("Skipped %d active process log(s) (use --force or -f to delete all)", res.Skipped))
+	}
+
+	return nil
+}
+
+func newBgAttachCommand() *cli.Command {
+	return &cli.Command{
+		Name:      "attach",
+		Aliases:   []string{"a", "at"},
+		Usage:     "Attach to a running background process by ID, PID, or Name",
+		ArgsUsage: "<id|pid|name>",
+		Action:    cmdBgAttach,
+	}
+}
+
+func cmdBgAttach(ctx context.Context, c *cli.Command) error {
+	args := c.Args().Slice()
+	if len(args) < 1 {
+		utils.PrintErr("usage: spd bg attach <id|pid|name>")
+		return nil
+	}
+
+	if err := utils.AttachBgProcess(ctx, args[0]); err != nil {
+		utils.PrintErr(err.Error())
+		return nil
 	}
 
 	return nil
