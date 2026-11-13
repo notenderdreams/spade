@@ -1,0 +1,74 @@
+name: Homebrew
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+    secrets:
+      HOMEBREW_TAP_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing stable release tag to publish to the tap
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: homebrew-tap
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Test and publish Homebrew formula
+    runs-on: macos-latest
+    timeout-minutes: 15
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+    steps:
+      - name: Check out release tooling
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Download published release checksums
+        run: |
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" --repo notenderdreams/spade --pattern '*_checksums.txt' --dir dist
+      - name: Generate formula
+        run: |
+          version="${RELEASE_TAG#v}"
+          python3 scripts/generate-homebrew.py --version "$version" --checksums "dist/spade_${version}_checksums.txt" --output dist/spade.rb
+          ruby -c dist/spade.rb
+      - name: Test Homebrew installation and completions
+        run: |
+          brew tap-new notenderdreams/spade-release-test
+          cp dist/spade.rb "$(brew --repo notenderdreams/spade-release-test)/Formula/spade.rb"
+          brew install notenderdreams/spade-release-test/spade
+          brew test notenderdreams/spade-release-test/spade
+          spd --version
+      - name: Upload generated formula to release
+        run: gh release upload "$RELEASE_TAG" dist/spade.rb --repo notenderdreams/spade --clobber
+      - name: Check out Homebrew tap
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: notenderdreams/homebrew-tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
+      - name: Publish generated formula to tap
+        run: |
+          cp dist/spade.rb homebrew-tap/Formula/spade.rb
+          cd homebrew-tap
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Formula/spade.rb
+          if ! git diff --cached --quiet; then
+            git commit -m "spade ${RELEASE_TAG}"
+            git push origin HEAD
+          fi

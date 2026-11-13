@@ -40,38 +40,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Homebrew formula
-        if: ${{ !contains(github.ref_name, '-') }}
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          version="${RELEASE_TAG#v}"
-          python3 scripts/generate-homebrew.py --version "$version" --checksums "dist/spade_${version}_checksums.txt" --output dist/spade.rb
-          ruby -c dist/spade.rb
-      - name: Upload generated formula to release
-        if: ${{ !contains(github.ref_name, '-') }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release upload "$RELEASE_TAG" dist/spade.rb --clobber
-      - name: Check out Homebrew tap
-        if: ${{ !contains(github.ref_name, '-') }}
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          repository: notenderdreams/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-tap
-      - name: Publish generated formula to tap
-        if: ${{ !contains(github.ref_name, '-') }}
-        env:
-          RELEASE_TAG: ${{ github.ref_name }}
-        run: |
-          cp dist/spade.rb homebrew-tap/Formula/spade.rb
-          cd homebrew-tap
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Formula/spade.rb
-          if ! git diff --cached --quiet; then
-            git commit -m "spade ${RELEASE_TAG}"
-            git push origin HEAD
-          fi
+  homebrew:
+    name: Publish Homebrew formula
+    needs: release
+    if: ${{ !contains(github.ref_name, '-') }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/homebrew.yml
+    with:
+      tag: ${{ github.ref_name }}
+    secrets:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

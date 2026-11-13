@@ -27,7 +27,7 @@ class Spade < Formula
 
   def install
     bin.install "spd"
-    generate_completions_from_executable(bin/"spd", "completion", shell_parameter_format: :arg)
+    generate_completions_from_executable(bin/"spd", "completion")
   end
 
   test do

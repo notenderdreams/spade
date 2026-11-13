@@ -88,9 +88,11 @@ using the checksums of that release's final archives, uploads `spade.rb`, and
 copies the same file into the tap before committing and pushing it. No manual
 formula edits or tap commits are required.
 
-If the tap update fails, inspect the Actions log and correct the token permissions
-before retrying. The automation applies to release tags containing these workflow
-changes; the already published v0.1.0 tag predates it.
+The reusable `Homebrew` workflow tests installation and completions with
+Homebrew before publishing. It also accepts a manual dispatch with an existing
+release tag, so formula fixes can be published without changing release binaries
+or moving a tag. If a tap update fails, inspect the Actions log and rerun the
+Homebrew workflow after correcting the problem.
 
 ## Verify published artifacts
 
