@@ -18,6 +18,7 @@ source builds; update it when preparing a new version.
    go vet ./...
    go test -race ./...
    sh test/smoke.sh
+   python3 test/installer_test.py
    ```
 
 4. Install GoReleaser **v2.20.2**, matching the workflows, then validate all four
@@ -97,9 +98,15 @@ Homebrew workflow after correcting the problem.
 ## Verify published artifacts
 
 The release includes four versioned `.tar.gz` archives (Linux/macOS ×
-amd64/arm64) and `spade_VERSION_checksums.txt` with SHA-256 hashes. Windows is
+amd64/arm64), `installer.sh`, and `spade_VERSION_checksums.txt` with SHA-256 hashes. Windows is
 excluded because process management uses Unix APIs. macOS binaries have no
 Developer ID signature and are not notarized. Prerelease tags are marked as prereleases automatically.
+
+The standalone `installer.sh` detects the platform, downloads the selected
+stable release, verifies its archive against the checksum manifest, and installs
+`spd` to `~/.local/bin` by default. It accepts `--version` and `--install-dir`.
+The README uses the script on `main`, so it also works with existing releases
+that predate the installer release asset.
 
 Confirm the Actions run succeeds, download the native archive, verify its
 checksum, and run `spd --version` and the smoke suite against the downloaded

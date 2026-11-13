@@ -14,6 +14,32 @@ spd --version
 The formula installs the prebuilt binary for your platform and Bash, Zsh, and
 Fish completion files. No Go compiler or Apple Developer membership is required.
 
+### Install without Homebrew (macOS and Linux)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/notenderdreams/spade/main/installer.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+spd --version
+```
+
+The installer detects your operating system and CPU, downloads the latest stable
+release, verifies its SHA-256 checksum, and installs `spd` to `~/.local/bin`.
+It does not require sudo or Go. Add the `export PATH` line to your shell's startup
+file (for example, `~/.zshrc` or `~/.bashrc`) if that directory is not already on
+your PATH. See [shell completion setup](docs/SHELL_COMPLETION.md) to enable completions.
+
+To select a version or installation directory:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/notenderdreams/spade/main/installer.sh \
+  -o installer.sh
+sh installer.sh --version v0.1.1 --install-dir "$HOME/.local/bin"
+```
+
+You can inspect the downloaded script before running it. To upgrade later, run
+the installer again without `--version`. Saved scripts and configuration are
+preserved.
+
 ### Download v0.1.1
 
 Download an archive and `spade_0.1.1_checksums.txt` from the

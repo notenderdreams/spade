@@ -27,6 +27,7 @@ archives:
   - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
+      - installer.sh
       - README.md
       - CHANGELOG.md
       - docs/SHELL_COMPLETION.md
@@ -44,6 +45,8 @@ release:
     name: spade
   name_template: "Spade v{{ .Version }}"
   prerelease: auto
+  extra_files:
+    - glob: installer.sh
 
 changelog:
   sort: asc
