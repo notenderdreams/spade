@@ -3,10 +3,47 @@
 Spade is a lightweight CLI to save, manage, and run reusable command shortcuts with support for templated arguments.
 
 ## Installation
+
+### Download v0.1.0
+
+Download an archive and `spade_0.1.0_checksums.txt` from the
+[v0.1.0 release](https://github.com/notenderdreams/spade/releases/tag/v0.1.0).
+
+| Operating system | CPU | Archive |
+|------------------|-----|---------|
+| macOS | Apple Silicon | `spade_0.1.0_darwin_arm64.tar.gz` |
+| macOS | Intel | `spade_0.1.0_darwin_amd64.tar.gz` |
+| Linux | ARM64 | `spade_0.1.0_linux_arm64.tar.gz` |
+| Linux | Intel/AMD 64-bit | `spade_0.1.0_linux_amd64.tar.gz` |
+
+For example, on an Apple Silicon Mac, from the download directory:
+
+```bash
+grep ' spade_0.1.0_darwin_arm64.tar.gz$' spade_0.1.0_checksums.txt | shasum -a 256 -c -
+tar -xzf spade_0.1.0_darwin_arm64.tar.gz
+mkdir -p "$HOME/.local/bin"
+install -m 755 spd "$HOME/.local/bin/spd"
+export PATH="$HOME/.local/bin:$PATH"
+spd --version
+```
+
+Use the matching archive name for your platform. On Linux, `sha256sum -c -`
+can replace `shasum -a 256 -c -`. Add `$HOME/.local/bin` to your shell's
+startup configuration to keep it on `PATH`.
+
+Windows is not supported in v0.1.0; background execution uses Unix process groups.
+The macOS binaries are unsigned and are not notarized.
+
+### Build from source
+
+Requires Go 1.26.1 or later.
+
 ```bash
 git clone https://github.com/notenderdreams/spade.git
 cd spade
+git checkout v0.1.0
 go build -o spd .
+./spd --version
 ```
 For Shell Completion see [SHELL_COMPLETION.md](docs/SHELL_COMPLETION.md).
 
@@ -43,6 +80,7 @@ spd greet name=Batman             # named
 | `--dry-run` | `--dr` | Print resolved command without executing |
 | `--confirm` | `--c` | Show resolved command and prompt before executing |
 | `--workspace` | `-w` | Run the command from this directory |
+| `--detached` | `-d` | Run the script in the background |
 
 For example, `spd add build make --workspace /path/to/project` saves the
 workspace with the script. The runtime flag overrides the saved value:
@@ -178,4 +216,14 @@ spd import out.spade --overwrite  # overwrite existing scripts
 
 ## Data
 
-Scripts are stored in `~/.config/spade/spade.db` (SQLite).
+Scripts are stored in the operating system's user configuration directory:
+
+- Linux: `$XDG_CONFIG_HOME/spade/spade.db`, or `~/.config/spade/spade.db` when unset.
+- macOS: `~/Library/Application Support/spade/spade.db`.
+
+Script backups and background process logs are stored alongside the SQLite database.
+
+## Releases
+
+See [CHANGELOG.md](CHANGELOG.md) for changes and [RELEASING.md](docs/RELEASING.md)
+for validation and publishing instructions.

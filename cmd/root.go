@@ -10,11 +10,14 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+// Version is overridden by the release build's linker flags.
+var Version = "0.1.0"
+
 func NewRootCommand() *cli.Command {
 	return &cli.Command{
 		Name:    "spade",
 		Usage:   "A simple CLI tool to manage and run scripts",
-		Version: "0.1.0",
+		Version: Version,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "workspace",

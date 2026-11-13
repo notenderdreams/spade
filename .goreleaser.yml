@@ -1,30 +1,46 @@
 version: 2
-
-before:
-  hooks:
-    - go mod tidy
+project_name: spade
 
 builds:
-  - env:
+  - id: spd
+    main: .
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
-      - windows
       - darwin
     goarch:
       - amd64
       - arm64
     binary: spd
+    flags:
+      - -trimpath
+      - -mod=readonly
+    ldflags:
+      - -s -w -X spd/cmd.Version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - format: tar.gz
-    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        format: zip
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - CHANGELOG.md
+      - docs/SHELL_COMPLETION.md
+      - docs/RELEASING.md
+      - docs/releases/*.md
+      - docs/assets/banner.png
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+release:
+  github:
+    owner: notenderdreams
+    name: spade
+  name_template: "Spade v{{ .Version }}"
+  prerelease: auto
 
 changelog:
   sort: asc

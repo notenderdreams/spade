@@ -22,8 +22,8 @@ var (
 
 func newBgCommand() *cli.Command {
 	return &cli.Command{
-		Name:    "bg",
-		Usage:   "Manage background processes",
+		Name:  "bg",
+		Usage: "Manage background processes",
 		Commands: []*cli.Command{
 			newBgListCommand(),
 			newBgKillCommand(),
