@@ -19,6 +19,9 @@ builds:
     ldflags:
       - -s -w -X spd/cmd.Version={{ .Version }}
     mod_timestamp: "{{ .CommitTimestamp }}"
+    hooks:
+      post:
+        - sh scripts/sign-macos.sh "{{ .Os }}" "{{ .Path }}"
 
 archives:
   - formats: [tar.gz]

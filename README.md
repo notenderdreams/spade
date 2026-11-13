@@ -4,6 +4,16 @@ Spade is a lightweight CLI to save, manage, and run reusable command shortcuts w
 
 ## Installation
 
+### Homebrew (macOS and Linux)
+
+```bash
+brew install notenderdreams/tap/spade
+spd --version
+```
+
+The formula installs the prebuilt binary for your platform and Bash, Zsh, and
+Fish completion files. No Go compiler or Apple Developer membership is required.
+
 ### Download v0.1.0
 
 Download an archive and `spade_0.1.0_checksums.txt` from the

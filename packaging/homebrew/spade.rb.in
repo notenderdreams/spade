@@ -1,0 +1,38 @@
+class Spade < Formula
+  desc "Save, manage, and run reusable command shortcuts"
+  homepage "https://github.com/notenderdreams/spade"
+  version "@VERSION@"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/notenderdreams/spade/releases/download/v@VERSION@/spade_@VERSION@_darwin_arm64.tar.gz"
+      sha256 "@DARWIN_ARM64_SHA256@"
+    end
+    on_intel do
+      url "https://github.com/notenderdreams/spade/releases/download/v@VERSION@/spade_@VERSION@_darwin_amd64.tar.gz"
+      sha256 "@DARWIN_AMD64_SHA256@"
+    end
+  end
+
+  on_linux do
+    on_arm do
+      url "https://github.com/notenderdreams/spade/releases/download/v@VERSION@/spade_@VERSION@_linux_arm64.tar.gz"
+      sha256 "@LINUX_ARM64_SHA256@"
+    end
+    on_intel do
+      url "https://github.com/notenderdreams/spade/releases/download/v@VERSION@/spade_@VERSION@_linux_amd64.tar.gz"
+      sha256 "@LINUX_AMD64_SHA256@"
+    end
+  end
+
+  def install
+    bin.install "spd"
+    generate_completions_from_executable(bin/"spd", "completion", shell_parameter_format: :arg)
+  end
+
+  test do
+    assert_match "spade version #{version}", shell_output("#{bin}/spd --version")
+    system bin/"spd", "add", "homebrew-smoke", "echo", "hello"
+    assert_match "hello", shell_output("#{bin}/spd homebrew-smoke")
+  end
+end

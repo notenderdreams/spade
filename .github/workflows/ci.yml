@@ -61,6 +61,13 @@ jobs:
         with:
           version: v2.20.2
           args: release --snapshot --clean
+      - name: Validate Homebrew formula generation
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("dist/metadata.json"))["version"])')
+          stable_version="${version%%-*}"
+          sed "s/${version}/${stable_version}/g" "dist/spade_${version}_checksums.txt" > dist/homebrew-checksums.txt
+          python3 scripts/generate-homebrew.py --version "$stable_version" --checksums dist/homebrew-checksums.txt --output dist/spade.rb
+          ruby -c dist/spade.rb
       - name: Smoke test packaged Linux binary
         run: |
           mkdir -p dist/smoke
