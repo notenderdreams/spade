@@ -14,23 +14,23 @@ spd --version
 The formula installs the prebuilt binary for your platform and Bash, Zsh, and
 Fish completion files. No Go compiler or Apple Developer membership is required.
 
-### Download v0.1.0
+### Download v0.1.1
 
-Download an archive and `spade_0.1.0_checksums.txt` from the
-[v0.1.0 release](https://github.com/notenderdreams/spade/releases/tag/v0.1.0).
+Download an archive and `spade_0.1.1_checksums.txt` from the
+[v0.1.1 release](https://github.com/notenderdreams/spade/releases/tag/v0.1.1).
 
 | Operating system | CPU | Archive |
 |------------------|-----|---------|
-| macOS | Apple Silicon | `spade_0.1.0_darwin_arm64.tar.gz` |
-| macOS | Intel | `spade_0.1.0_darwin_amd64.tar.gz` |
-| Linux | ARM64 | `spade_0.1.0_linux_arm64.tar.gz` |
-| Linux | Intel/AMD 64-bit | `spade_0.1.0_linux_amd64.tar.gz` |
+| macOS | Apple Silicon | `spade_0.1.1_darwin_arm64.tar.gz` |
+| macOS | Intel | `spade_0.1.1_darwin_amd64.tar.gz` |
+| Linux | ARM64 | `spade_0.1.1_linux_arm64.tar.gz` |
+| Linux | Intel/AMD 64-bit | `spade_0.1.1_linux_amd64.tar.gz` |
 
 For example, on an Apple Silicon Mac, from the download directory:
 
 ```bash
-grep ' spade_0.1.0_darwin_arm64.tar.gz$' spade_0.1.0_checksums.txt | shasum -a 256 -c -
-tar -xzf spade_0.1.0_darwin_arm64.tar.gz
+grep ' spade_0.1.1_darwin_arm64.tar.gz$' spade_0.1.1_checksums.txt | shasum -a 256 -c -
+tar -xzf spade_0.1.1_darwin_arm64.tar.gz
 mkdir -p "$HOME/.local/bin"
 install -m 755 spd "$HOME/.local/bin/spd"
 export PATH="$HOME/.local/bin:$PATH"
@@ -41,8 +41,8 @@ Use the matching archive name for your platform. On Linux, `sha256sum -c -`
 can replace `shasum -a 256 -c -`. Add `$HOME/.local/bin` to your shell's
 startup configuration to keep it on `PATH`.
 
-Windows is not supported in v0.1.0; background execution uses Unix process groups.
-The macOS binaries are unsigned and are not notarized.
+Windows is not supported in v0.1.1; background execution uses Unix process groups.
+The macOS binaries are ad-hoc signed. They are not Developer ID signed or notarized.
 
 ### Build from source
 
@@ -51,7 +51,7 @@ Requires Go 1.26.1 or later.
 ```bash
 git clone https://github.com/notenderdreams/spade.git
 cd spade
-git checkout v0.1.0
+git checkout v0.1.1
 go build -o spd .
 ./spd --version
 ```
@@ -146,7 +146,7 @@ spd greet id=42        # correct: Hello world : 42
 ```bash
 # flags before -- are parsed by spade
 spd sit --version
-# spade version 0.1.0
+# spade version 0.1.1
 
 # flags after -- are forwarded to the script
 spd sit -- --version

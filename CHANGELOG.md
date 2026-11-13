@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.1
+
+- Install prebuilt macOS and Linux binaries with `brew install notenderdreams/tap/spade`.
+- Generate `spade.rb` during releases, upload it as a release asset, and automatically publish it to the Homebrew tap.
+- Install Bash, Zsh, and Fish completions through Homebrew.
+- Ad-hoc sign and verify both Intel and Apple Silicon macOS binaries before packaging.
+
+See [the release notes](docs/releases/v0.1.1.md) for details.
+
 ## 0.1.0
 
 Initial release of Spade (`spd`).

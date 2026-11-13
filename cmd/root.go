@@ -11,7 +11,7 @@ import (
 )
 
 // Version is overridden by the release build's linker flags.
-var Version = "0.1.0"
+var Version = "0.1.1"
 
 func NewRootCommand() *cli.Command {
 	return &cli.Command{

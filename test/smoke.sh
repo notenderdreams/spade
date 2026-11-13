@@ -28,7 +28,7 @@ else
 	go build -o "$BIN" "$ROOT"
 fi
 
-"$BIN" --version | grep -Fx "spade version ${SPADE_TEST_VERSION:-0.1.0}"
+"$BIN" --version | grep -Fx "spade version ${SPADE_TEST_VERSION:-0.1.1}"
 
 "$BIN" add smoke-source printf 'hello\nworld\n'
 "$BIN" add smoke-upper tr 'a-z' 'A-Z'

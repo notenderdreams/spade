@@ -34,7 +34,7 @@ source builds; update it when preparing a new version.
    prebuilt native binary:
 
    ```sh
-   SPADE_TEST_BIN=/absolute/path/to/spd SPADE_TEST_VERSION=0.1.0 sh test/smoke.sh
+   SPADE_TEST_BIN=/absolute/path/to/spd SPADE_TEST_VERSION=0.1.1 sh test/smoke.sh
    ```
 
 5. Commit the release preparation changes and check that the worktree is clean.
@@ -45,8 +45,8 @@ After reviewing the prepared commit, push the branch and an annotated tag:
 
 ```sh
 git push origin main
-git tag -a v0.1.0 -m 'Spade v0.1.0'
-git push origin v0.1.0
+git tag -a v0.1.1 -m 'Spade v0.1.1'
+git push origin v0.1.1
 ```
 
 The tag workflow runs the shared CI checks on Linux and macOS, builds snapshot
